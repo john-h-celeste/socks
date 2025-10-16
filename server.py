@@ -1,15 +1,16 @@
-import os
+import sys
 import socket
 import threading
 
 import serverconfig as config
+import message
 
 host = '0.0.0.0' # or 'localhost'
 address = (host, config.port)
 
 def handle(conn, addr):
     print(f'connected at {addr}')
-    conn.send('hi <3'.encode(config.encoding))
+    message.send(conn, 'OK', 'hi <3')
     conn.close()
 
 def main():
@@ -19,7 +20,10 @@ def main():
     s.listen()
     
     while True:
-        conn,addr = s.accept()
+        try:
+            conn,addr = s.accept()
+        except KeyboardInterrupt:
+            sys.exit()
         thread = threading.Thread(target = handle, args = (conn, addr))
         thread.start()
 
