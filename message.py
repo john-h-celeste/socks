@@ -3,7 +3,7 @@ import struct
 import config
 
 statuses = [
-    'OK', 'ERR',
+    'OK', 'ERR', 'END',
     'AUTH', 'CRED', # authentication
     'UPLOAD', 'DOWNLOAD', 'MKDIR', 'RM', 'DIR', # filesystem operations
     'DATA', 'ACK', # file data
@@ -40,3 +40,6 @@ class MessageConnection:
     def recv(self):
         status,data = self.recvbin()
         return status, data.decode(config.encoding)
+    
+    def close(self):
+        self.conn.close()
