@@ -1,6 +1,8 @@
 import config
 
 def send(conn, status, message):
+    assert '@' not in status, 'the status may not contain an at sign (\'@\')'
+    assert '\0' not in message, 'the message may not contain a null character (\'\\0\')'
     conn.send((status + '@' + message + '\0').encode(config.encoding))
 
 def recv(conn):
