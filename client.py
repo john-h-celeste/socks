@@ -11,8 +11,9 @@ address = (serverhost, config.port)
 def main():
     conn = socket.socket()
     conn.connect(address)
+    conn = message.MessageConnection(conn)
     while True:
-        status,data = message.recv(conn)
+        status,data = conn.recv()
         print(status, repr(data))
         break
     

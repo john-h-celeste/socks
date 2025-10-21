@@ -9,8 +9,9 @@ host = '0.0.0.0' # or 'localhost'
 address = (host, config.port)
 
 def handle(conn, addr):
+    conn = message.MessageConnection(conn)
     print(f'connected at {addr}')
-    message.send(conn, 'OK', 'hi <3')
+    conn.send('OK', 'hi <3')
     conn.close()
 
 def main():

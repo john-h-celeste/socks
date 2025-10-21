@@ -13,24 +13,28 @@ def statustocode(s):
 def codetostatus(c):
     return statuses[c]
 
-def sendbin(conn, status, message):
-    assert status in statuses, f'unrecognized status: {status}'
-    conn.send(struct.pack('<BI', statustocode(status), len(message)) + message)
+class MessageConnection:
+    def __init__(self, conn):
+        self.conn = conn
 
-def recvbin(conn):
-    data = ''
-    while True:
-        data += conn.recv(config.chunksize)
-        if len(data) >= struct.calcsize('<BI'):
-            code,datalen = struct.unpack_from('<BI', data)
-            if len(data) >= datalen + struct.calcsize('<BI'):
-                break
-    code,datalen = struct.unpack_from('<BI', data)
-    return codetostatus(code), data[struct.calcsize('<BI'):struct.calcsize('<BI') + datalen]
+    def sendbin(status, message):
+        assert status in statuses, f'unrecognized status: {status}'
+        self.conn.send(struct.pack('<BI', statustocode(status), len(message)) + message)
 
-def send(conn, status, message):
-    sendbin(conn, status, message.encode(config.encoding)
+    def recvbin():
+        data = ''
+        while True:
+            data += self.conn.recv(config.chunksize)
+            if len(data) >= struct.calcsize('<BI'):
+                code,datalen = struct.unpack_from('<BI', data)
+                if len(data) >= datalen + struct.calcsize('<BI'):
+                    break
+        code,datalen = struct.unpack_from('<BI', data)
+        return codetostatus(code), data[struct.calcsize('<BI'):struct.calcsize('<BI') + datalen]
 
-def recv(conn):
-    status,data = recvbin(conn)
-    return status, data.decode(config.encoding)
+    def send(status, message):
+        sendbin(self.conn, status, message.encode(config.encoding)
+
+    def recv():
+        status,data = recvbin(self.conn)
+        return status, data.decode(config.encoding)
