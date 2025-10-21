@@ -1,6 +1,7 @@
 import sys
 import socket
 import threading
+import time
 
 import serverconfig as config
 import message
@@ -27,7 +28,13 @@ def main():
             conn,addr = s.accept()
         except KeyboardInterrupt:
             sys.exit()
-        thread = threading.Thread(target = handle, args = (conn, addr))
+        thread = threading.Thread(target = handle, args = (conn, addr), daemon = False)
         thread.start()
 
-main()
+threading.Thread(target = main, args = (), daemon = True).start()
+
+try:
+    while True:
+        time.sleep(0.5)
+except KeyboardInterrupt:
+    sys.exit()
