@@ -1,3 +1,5 @@
+import struct
+
 import config
 
 statuses = [
@@ -17,12 +19,12 @@ class MessageConnection:
     def __init__(self, conn):
         self.conn = conn
 
-    def sendbin(status, message):
+    def sendbin(self, status, message):
         assert status in statuses, f'unrecognized status: {status}'
         self.conn.send(struct.pack('<BI', statustocode(status), len(message)) + message)
 
-    def recvbin():
-        data = ''
+    def recvbin(self):
+        data = b''
         while True:
             data += self.conn.recv(config.chunksize)
             if len(data) >= struct.calcsize('<BI'):
@@ -32,9 +34,9 @@ class MessageConnection:
         code,datalen = struct.unpack_from('<BI', data)
         return codetostatus(code), data[struct.calcsize('<BI'):struct.calcsize('<BI') + datalen]
 
-    def send(status, message):
-        sendbin(self.conn, status, message.encode(config.encoding)
+    def send(self, status, message):
+        self.sendbin(status, message.encode(config.encoding))
 
-    def recv():
-        status,data = recvbin(self.conn)
+    def recv(self):
+        status,data = self.recvbin()
         return status, data.decode(config.encoding)
