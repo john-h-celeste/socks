@@ -10,9 +10,11 @@ address = (host, config.port)
 
 def handle(conn, addr):
     conn = message.MessageConnection(conn)
-    print(f'connected at {addr}')
+    print(f'connection from {addr}')
     conn.send('OK', 'hi <3')
+    print(conn.recv())
     conn.close()
+    print(f'ended connection from {addr}')
 
 def main():
     print(f'started (i am {repr(socket.gethostname())})')

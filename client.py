@@ -15,6 +15,7 @@ def main():
     while True:
         status,data = conn.recv()
         print(status, repr(data))
+        conn.send('OK', input())
         break
     
     conn.close()
