@@ -18,21 +18,22 @@ def codetostatus(c):
 class MessageConnection:
     def __init__(self, conn):
         self.conn = conn
+        self.buffer = b''
 
     def sendbin(self, status, message):
         assert status in statuses, f'unrecognized status: {status}'
         self.conn.send(struct.pack('<BI', statustocode(status), len(message)) + message)
 
     def recvbin(self):
-        data = b''
         while True:
-            data += self.conn.recv(config.chunksize)
-            if len(data) >= struct.calcsize('<BI'):
-                code,datalen = struct.unpack_from('<BI', data)
-                if len(data) >= datalen + struct.calcsize('<BI'):
+            self.buffer += self.conn.recv(config.chunksize)
+            if len(self.buffer) >= struct.calcsize('<BI'):
+                code,datalen = struct.unpack_from('<BI', self.buffer)
+                if len(self.buffer) >= datalen + struct.calcsize('<BI'):
                     break
-        code,datalen = struct.unpack_from('<BI', data)
-        return codetostatus(code), data[struct.calcsize('<BI'):struct.calcsize('<BI') + datalen]
+        code,datalen = struct.unpack_from('<BI', self.buffer)
+        data,self.buffer = self.buffer[struct.calcsize('<BI'):struct.calcsize('<BI') + datalen], self.buffer[struct.calcsize('<BI') + datalen:]
+        return codetostatus(code), data
 
     def send(self, status, message):
         self.sendbin(status, message.encode(config.encoding))
