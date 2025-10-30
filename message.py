@@ -19,6 +19,10 @@ class Message:
     def __init__(self, status, data):
         self.status = status
         self.data = data
+    
+    @property
+    def text(self):
+        return self.data.decode(config.encoding)
 
 class MessageConnection:
     def __init__(self, conn):
@@ -26,6 +30,8 @@ class MessageConnection:
         self.buffer = b''
 
     def send(self, status, message):
+        if isinstance(message, str):
+            message = message.encode(config.encoding)
         assert status in statuses, f'unrecognized status: {status}'
         self.conn.send(struct.pack('<BI', statustocode(status), len(message)) + message)
 
@@ -39,13 +45,6 @@ class MessageConnection:
         code,datalen = struct.unpack_from('<BI', self.buffer)
         data,self.buffer = self.buffer[struct.calcsize('<BI'):struct.calcsize('<BI') + datalen], self.buffer[struct.calcsize('<BI') + datalen:]
         return Message(codetostatus(code), data)
-
-    def sendstr(self, status, message):
-        self.send(status, message.encode(config.encoding))
-
-    def recvstr(self):
-        m = self.recv()
-        return Message(m.status, m.data.decode(config.encoding))
     
     def close(self):
         self.conn.close()
