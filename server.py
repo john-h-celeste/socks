@@ -12,8 +12,9 @@ address = (host, config.port)
 def handle(conn, addr):
     conn = message.MessageConnection(conn)
     print(f'connection from {addr}')
-    conn.send('OK', 'hi <3')
-    print(conn.recv())
+    conn.sendstr('OK', 'hi <3')
+    message = conn.recvstr()
+    print(message.status, message.data)
     conn.close()
     print(f'ended connection from {addr}')
 

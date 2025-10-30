@@ -15,16 +15,21 @@ def statustocode(s):
 def codetostatus(c):
     return statuses[c]
 
+class Message:
+    def __init__(self, status, data):
+        self.status = status
+        self.data = data
+
 class MessageConnection:
     def __init__(self, conn):
         self.conn = conn
         self.buffer = b''
 
-    def sendbin(self, status, message):
+    def send(self, status, message):
         assert status in statuses, f'unrecognized status: {status}'
         self.conn.send(struct.pack('<BI', statustocode(status), len(message)) + message)
 
-    def recvbin(self):
+    def recv(self):
         while True:
             self.buffer += self.conn.recv(config.chunksize)
             if len(self.buffer) >= struct.calcsize('<BI'):
@@ -33,14 +38,14 @@ class MessageConnection:
                     break
         code,datalen = struct.unpack_from('<BI', self.buffer)
         data,self.buffer = self.buffer[struct.calcsize('<BI'):struct.calcsize('<BI') + datalen], self.buffer[struct.calcsize('<BI') + datalen:]
-        return codetostatus(code), data
+        return Message(codetostatus(code), data)
 
-    def send(self, status, message):
+    def sendstr(self, status, message):
         self.sendbin(status, message.encode(config.encoding))
 
-    def recv(self):
-        status,data = self.recvbin()
-        return status, data.decode(config.encoding)
+    def recvstr(self):
+        message = self.recvbin()
+        return Message(message.status, message.data.decode(config.encoding))
     
     def close(self):
         self.conn.close()
