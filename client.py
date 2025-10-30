@@ -9,31 +9,33 @@ serverhost = 'localhost'
 address = (serverhost, config.port)
 
 class Client:
-    def __init__(self, address, credentials):
-        s = socket.socket()
-        s.connect(address)
+    def __init__(self, s, credentials):
         self.conn = message.MessageConnection(s)
         pass # need to implement authentication
     
     def upload(self, filename):
-        # send an UPLOAD(filename) message
-        # based on response
-        #   ERR: prompt overwrite y/n?
-        #   OK: upload the file as a bunch of DATA messages
+        # send UPLOAD(filename)
+        # if recieve ERR:
+        #   prompt the user to overwrite
+        #   if so:
+        #     send OK
+        #   else:
+        #     send ERR
+        #     end
+        # send DATA messages from the file
+        # send an END message
         pass
     
     def download(self, filename):
-        # send DOWNLOAD(filename) message
-        # based on response
-        #   ERR: oh :(
-        #   OK: take a bunch of DATA messages
+        # send DOWNLOAD(filename)
+        # if recieve ERR:
+        #   end
+        # recieve DATA messages into the file until an END message is recieved
         pass
     
     def delete(self, filename):
-        # send DELETE(filename)
-        # based on response
-        #   ERR: oh :(
-        #   OK: ok :)
+        # send RM(filename)
+        # wait for ERR or OK
         pass
     
     def dirs(self):
@@ -43,21 +45,18 @@ class Client:
     
     def subfolder_create(self, path):
         # send MKDIR(path)
-        # based on response
-        #   ERR: oh :(
-        #   OK: ok :)
+        # wait for ERR or OK
         pass
     
     def subfolder_delete(self, path):
         # send RMDIR(path)
-        # based on response
-        #   ERR: oh :(
-        #   OK: ok :)
+        # wait for ERR or OK
         pass
 
 def main():
     s = socket.socket()
     s.connect(address)
+    #client = Client(s)
     conn = message.MessageConnection(s)
     while True:
         m = conn.recv()
