@@ -60,8 +60,8 @@ def main():
     conn.connect(address)
     conn = message.MessageConnection(conn)
     while True:
-        message = conn.recvstr()
-        print(message.status, repr(message.data))
+        m = conn.recvstr()
+        print(m.status, repr(m.data))
         conn.sendstr('OK', input())
         break
     

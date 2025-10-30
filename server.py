@@ -13,8 +13,8 @@ def handle(conn, addr):
     conn = message.MessageConnection(conn)
     print(f'connection from {addr}')
     conn.sendstr('OK', 'hi <3')
-    message = conn.recvstr()
-    print(message.status, message.data)
+    m = conn.recvstr()
+    print(m.status, m.data)
     conn.close()
     print(f'ended connection from {addr}')
 

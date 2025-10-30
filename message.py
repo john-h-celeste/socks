@@ -41,11 +41,11 @@ class MessageConnection:
         return Message(codetostatus(code), data)
 
     def sendstr(self, status, message):
-        self.sendbin(status, message.encode(config.encoding))
+        self.send(status, message.encode(config.encoding))
 
     def recvstr(self):
-        message = self.recvbin()
-        return Message(message.status, message.data.decode(config.encoding))
+        m = self.recv()
+        return Message(m.status, m.data.decode(config.encoding))
     
     def close(self):
         self.conn.close()
