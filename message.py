@@ -5,7 +5,7 @@ import config
 statuses = [
     'OK', 'ERR', 'END',
     'AUTH', 'CRED', # authentication
-    'UPLOAD', 'DOWNLOAD', 'MKDIR', 'RM', 'DIR', # filesystem operations
+    'UPLOAD', 'DOWNLOAD', 'RM', 'DIR', 'MKDIR', 'RMDIR', # filesystem operations
     'DATA', 'ACK', # file data
 ]
 
