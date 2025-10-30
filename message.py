@@ -13,7 +13,10 @@ def statustocode(s):
     return statuses.index(s)
 
 def codetostatus(c):
-    return statuses[c]
+    if 0 <= c < len(statuses):
+        return statuses[c]
+    else:
+        return c
 
 class Message:
     def __init__(self, status, data):
