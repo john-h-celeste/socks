@@ -56,9 +56,9 @@ class Client:
         pass
 
 def main():
-    conn = socket.socket()
-    conn.connect(address)
-    conn = message.MessageConnection(conn)
+    s = socket.socket()
+    s.connect(address)
+    conn = message.MessageConnection(s)
     while True:
         m = conn.recv()
         print(m.status, repr(m.text))
