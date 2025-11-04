@@ -20,6 +20,7 @@ def codetostatus(c):
 
 class Message:
     def __init__(self, status, data):
+        print(status, data)
         self.status = status
         self.data = data
     
@@ -40,11 +41,11 @@ class MessageConnection:
 
     def recv(self):
         while True:
-            self.buffer += self.conn.recv(config.chunksize)
             if len(self.buffer) >= struct.calcsize('<BI'):
                 code,datalen = struct.unpack_from('<BI', self.buffer)
                 if len(self.buffer) >= datalen + struct.calcsize('<BI'):
                     break
+            self.buffer += self.conn.recv(config.chunksize)
         code,datalen = struct.unpack_from('<BI', self.buffer)
         data,self.buffer = self.buffer[struct.calcsize('<BI'):struct.calcsize('<BI') + datalen], self.buffer[struct.calcsize('<BI') + datalen:]
         return Message(codetostatus(code), data)
