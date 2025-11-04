@@ -2,6 +2,7 @@ import sys
 import socket
 import threading
 import time
+import os
 
 import serverconfig as config
 import message
@@ -18,15 +19,15 @@ class Server:
         # handle a message based on its status
         if message.status == 'UPLOAD':
             self.handle_upload(message.text)
-        if message.status == 'DOWNLOAD':
+        elif message.status == 'DOWNLOAD':
             self.handle_download(message.text)
-        if message.status == 'RM':
+        elif message.status == 'RM':
             self.handle_delete(message.text)
-        if message.status == 'DIR':
+        elif message.status == 'DIR':
             self.handle_dirs()
-        if message.status == 'MKDIR':
+        elif message.status == 'MKDIR':
             self.handle_subfolder_create(message.text)
-        if message.status == 'RMDIR':
+        elif message.status == 'RMDIR':
             self.handle_subfolder_delete(message.text)
         else:
             self.conn.send('ERR', f'unrecognized status: {message.status}')
@@ -39,7 +40,17 @@ class Server:
         #   else:
         #     end
         # recieve DATA messages into the file until an END message is recieved
-        pass
+        if os.path.exists(os.path.join(config.filepath, filename)):
+            self.conn.send('ERR', f'File exists: {filename}')
+            confirm = self.conn.recv()
+            if confirm.status != 'OK':
+                return
+        else:
+            self.conn.send('OK', f'Creating file: {filename}')
+        with open(os.path.join(config.filepath, filename), 'wb') as file:
+            while (msg := self.conn.recv()).status == 'DATA':
+                file.write(msg.data)
+        # idk just assume the message is END
     
     def handle_download(self, filename):
         # if filename does not exist:
@@ -47,7 +58,14 @@ class Server:
         #   end
         # send DATA messages from the file
         # send an END message
-        pass
+        if not os.path.exists(os.path.join(config.filepath, filename)):
+            self.conn.send('ERR', 'File does not exist: {filename}')
+        else:
+            self.conn.send('OK', 'ok')
+        with open(os.path.join(config.filepath, filename), 'rb') as file:
+            while len(chunk := file.read(config.filechunksize)) > 0:
+                self.conn.send('DATA', chunk)
+        self.conn.send('END', 'end')
     
     def handle_delete(self, filename):
         # if filename does not exist:
@@ -76,14 +94,20 @@ class Server:
         # delete subfolder
         # send OK
         pass
+    
+    def close(self):
+        self.conn.close()
 
-def handle(conn, addr):
-    conn = message.MessageConnection(conn)
+def handle(s, addr):
+    server = Server(s)
     print(f'connection from {addr}')
-    conn.send('OK', 'hi <3')
-    m = conn.recv()
+    m = server.conn.recv()
     print(m.status, m.text)
-    conn.close()
+    server.handle_message(m)
+    m = server.conn.recv()
+    print(m.status, m.text)
+    server.handle_message(m)
+    server.close()
     print(f'ended connection from {addr}')
 
 def main():
