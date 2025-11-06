@@ -3,10 +3,10 @@ import struct
 import config
 
 statuses = [
-    'OK', 'ERR', 'END',
+    'OK', 'ERR', 'CLOSE',
     'AUTH', 'CRED', # authentication
     'UPLOAD', 'DOWNLOAD', 'RM', 'DIR', 'MKDIR', 'RMDIR', # filesystem operations
-    'DATA', 'ACK', # file data
+    'DATA', 'END', # file data
 ]
 
 def statustocode(s):
@@ -20,7 +20,7 @@ def codetostatus(c):
 
 class Message:
     def __init__(self, status, data):
-        print(status, data)
+        #print(status, data)
         self.status = status
         self.data = data
     

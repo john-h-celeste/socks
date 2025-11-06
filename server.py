@@ -3,6 +3,7 @@ import socket
 import threading
 import time
 import os
+import shutil
 
 import serverconfig as config
 import message
@@ -15,22 +16,27 @@ class Server:
         self.conn = message.MessageConnection(s)
         pass # need to implement authentication
     
-    def handle_message(self, message):
-        # handle a message based on its status
-        if message.status == 'UPLOAD':
-            self.handle_upload(message.text)
-        elif message.status == 'DOWNLOAD':
-            self.handle_download(message.text)
-        elif message.status == 'RM':
-            self.handle_delete(message.text)
-        elif message.status == 'DIR':
-            self.handle_dirs()
-        elif message.status == 'MKDIR':
-            self.handle_subfolder_create(message.text)
-        elif message.status == 'RMDIR':
-            self.handle_subfolder_delete(message.text)
-        else:
-            self.conn.send('ERR', f'unrecognized status: {message.status}')
+    def handle_messages(self):
+        while True:
+            message = self.conn.recv()
+            print(message.status, message.text)
+            if message.status == 'UPLOAD':
+                self.handle_upload(message.text)
+            elif message.status == 'DOWNLOAD':
+                self.handle_download(message.text)
+            elif message.status == 'RM':
+                self.handle_delete(message.text)
+            elif message.status == 'DIR':
+                self.handle_dirs()
+            elif message.status == 'MKDIR':
+                self.handle_subfolder_create(message.text)
+            elif message.status == 'RMDIR':
+                self.handle_subfolder_delete(message.text)
+            elif message.status == 'CLOSE':
+                self.handle_close()
+                return
+            else:
+                self.conn.send('ERR', f'unrecognized status: {message.status}')
     
     def handle_upload(self, filename):
         # if filename exists:
@@ -73,11 +79,20 @@ class Server:
         #   end
         # delete the file
         # send OK
-        pass
+        if not os.path.exists(os.path.join(config.filepath, filename)):
+            self.conn.send('ERR', 'File does not exist: {filename}')
+        else:
+            os.remove(os.path.join(config.filepath, filename))
+            self.conn.send('OK', 'deleted')
     
     def handle_dirs(self):
         # send OK(dirs and files)
-        pass
+        files = []
+        for dirpath,dirnames,filenames in os.walk(config.filepath):
+            files.extend(os.path.join('\\', os.path.relpath(os.path.join(dirpath, filename), config.filepath)) for filename in reversed(filenames))
+            files.append(os.path.join('\\', os.path.relpath(dirpath, config.filepath)))
+            dirnames[:] = reversed(dirnames)
+        self.conn.send('OK', '\n'.join(reversed(files)))
     
     def handle_subfolder_create(self, path):
         # if path exists:
@@ -85,7 +100,11 @@ class Server:
         #   end
         # create subfolder
         # send OK
-        pass
+        if os.path.exists(os.path.join(config.filepath, path)):
+            self.conn.send('ERR', 'Directory already exists: {path}')
+        else:
+            os.mkdir(os.path.join(config.filepath, path))
+            self.conn.send('OK', 'deleted')
     
     def handle_subfolder_delete(self, path):
         # if path does not exist:
@@ -93,21 +112,20 @@ class Server:
         #   end
         # delete subfolder
         # send OK
-        pass
+        if not os.path.exists(os.path.join(config.filepath, path)):
+            self.conn.send('ERR', 'Directory does not exist: {path}')
+        else:
+            shutil.rmtree(os.path.join(config.filepath, path))
+            self.conn.send('OK', 'deleted')
     
-    def close(self):
+    def handle_close(self):
+        self.conn.send('OK', 'closing')
         self.conn.close()
 
 def handle(s, addr):
     server = Server(s)
     print(f'connection from {addr}')
-    m = server.conn.recv()
-    print(m.status, m.text)
-    server.handle_message(m)
-    m = server.conn.recv()
-    print(m.status, m.text)
-    server.handle_message(m)
-    server.close()
+    server.handle_messages()
     print(f'ended connection from {addr}')
 
 def main():

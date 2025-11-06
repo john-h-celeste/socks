@@ -59,35 +59,59 @@ class Client:
     def delete(self, filename):
         # send RM(filename)
         # wait for ERR or OK
-        pass
+        self.conn.send('RM', filename)
+        resp = self.conn.recv()
+        if resp.status == 'ERR':
+            print(resp.data)
+            return
+        else:
+            print('Deleted.')
     
     def dirs(self):
         # send DIR
         # recieve OK(files and dirs)
+        self.conn.send('DIR', '')
+        resp = self.conn.recv()
+        print(resp.text.split('\n'))
         pass
     
     def subfolder_create(self, path):
         # send MKDIR(path)
         # wait for ERR or OK
-        pass
+        self.conn.send('MKDIR', path)
+        resp = self.conn.recv()
+        if resp.status == 'ERR':
+            print(resp.data)
+            return
+        else:
+            print('Created.')
     
     def subfolder_delete(self, path):
         # send RMDIR(path)
         # wait for ERR or OK
-        pass
+        self.conn.send('RMDIR', path)
+        resp = self.conn.recv()
+        if resp.status == 'ERR':
+            print(resp.data)
+            return
+        else:
+            print('Deleted.')
     
     def close(self):
-        # maybe tell the server?
+        self.conn.send('CLOSE', '')
+        resp = self.conn.recv()
         self.conn.close()
 
 def main():
     s = socket.socket()
     s.connect(address)
-    client = Client(s, '')
-    with open('client.py', 'rb') as f:
-        client.upload(f, 'file')
+    try:
+        client = Client(s, '')
+        with open('client.py', 'rb') as f:
+            client.upload(f, 'file')
         client.download('file')
-    
-    client.close()
+        client.dirs()
+    finally:
+        client.close()
 
 main()
